@@ -331,7 +331,7 @@
         }
     }
     /**
-     * 下拉列表刷新
+     * 下拉列表刷新    
      * 作为 fnGetData 的 callback 函数调用
      */
     function refreshDropMenu($input, data, options) {
@@ -366,16 +366,29 @@
         // 生成表头
         if (options.showHeader) {
             html.push('<thead><tr>');
-            for (field in dataList[0]) {
-                if (!inEffectiveFields(field, options)) {
-                    continue;
-                }
-
-                html.push('<th>', (options.effectiveFieldsAlias[field] || field),
-                    index === 0 ? ('(' + len + ')') : '' , // 表头第一列记录总数
-                    '</th>');
-
-                index++;
+            
+            //如果指定了顺序，则处理列的顺序
+            if(options.order){
+	            for (field in options.effectiveFields) {
+	                var  fieldName = options.effectiveFields[field];
+	                html.push('<th>', (options.effectiveFieldsAlias[fieldName] || fieldName),
+	                    index === 0 ? ('(' + len + ')') : '' , // 表头第一列记录总数
+	                    '</th>');
+	
+	                index++;
+	            }	
+            }else{//未指定顺序，则按照后台结果的顺序展示
+	            for (field in dataList[0]) {
+	                if (!inEffectiveFields(field, options)) {
+	                    continue;
+	                }
+	
+	                html.push('<th>', (options.effectiveFieldsAlias[field] || field),
+	                    index === 0 ? ('(' + len + ')') : '' , // 表头第一列记录总数
+	                    '</th>');
+	
+	                index++;
+	            }
             }
             html.push('</tr></thead>');
         }
@@ -390,22 +403,42 @@
             dataI = dataList[i];
             idValue = dataI[options.idField];
             keyValue = dataI[options.keyField];
-
-            for (field in dataI) {
-                // 标记作为 value 和 作为 id 的值
-                if (isUndefined(keyValue) && options.indexKey === index) {
-                    keyValue = dataI[field];
-                }
-                if (isUndefined(idValue) && options.indexId === index) {
-                    idValue = dataI[field];
-                }
-
-                index++;
-
-                // 列表中只显示有效的字段
-                if (inEffectiveFields(field, options)) {
-                    tds.push('<td data-name="', field, '">', dataI[field], '</td>');
-                }
+            
+            if(options.order){//如果指定了展示顺序
+	            
+	            //按照指定列顺序添加数据
+	            for (field in options.effectiveFields) {
+	                var  fieldName = options.effectiveFields[field];
+	                // 标记作为 value 和 作为 id 的值
+	                if (isUndefined(keyValue) && options.indexKey === index) {
+	                    keyValue = dataI[fieldName];
+	                }
+	                if (isUndefined(idValue) && options.indexId === index) {
+	                    idValue = dataI[fieldName];
+	                }
+	
+	                index++;
+	
+	                tds.push('<td data-name="', fieldName, '">', dataI[fieldName], '</td>');
+	                
+	            }
+            }else{
+	            for (field in dataI) {
+	                // 标记作为 value 和 作为 id 的值
+	                if (isUndefined(keyValue) && options.indexKey === index) {
+	                    keyValue = dataI[field];
+	                }
+	                if (isUndefined(idValue) && options.indexId === index) {
+	                    idValue = dataI[field];
+	                }
+	
+	                index++;
+	
+	                // 列表中只显示有效的字段
+	                if (inEffectiveFields(field, options)) {
+	                    tds.push('<td data-name="', field, '">', dataI[field], '</td>');
+	                }
+	            }
             }
 
             html.push('<tr data-index="', (dataI.__index || i),
@@ -685,7 +718,7 @@
         listHoverStyle: 'background: #07d; color:#fff', // 提示框列表鼠标悬浮的样式
         listHoverCSS: 'jhover',         // 提示框列表鼠标悬浮的样式名称
         clearable: FALSE,               // 是否可清除已输入的内容
-
+        order:true,                     //按照effectiveFields的顺序来显示
         /* key */
         keyLeft: 37,                    // 向左方向键，不同的操作系统可能会有差别，则自行定义
         keyUp: 38,                      // 向上方向键
